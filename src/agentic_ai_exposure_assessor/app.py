@@ -13,7 +13,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from . import config_loader, db, report, risk_engine, trace_ingest
@@ -124,3 +124,40 @@ def assess() -> RedirectResponse:
             trace_sources=[str(DEFAULT_TRACE)],
         )
     return RedirectResponse("/", status_code=303)
+
+
+# --------------------------------------------------------------------------- #
+# OTLP/HTTP live trace receiver                                                #
+# --------------------------------------------------------------------------- #
+@app.post("/v1/traces")
+async def otlp_traces(request: Request) -> JSONResponse:
+    """Receive OTLP/HTTP traces (JSON encoding) and ingest them live.
+
+    Point an instrumented Agentic AI app's OpenTelemetry exporter (or an OpenTelemetry
+    Collector) at this endpoint:
+
+        OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://127.0.0.1:8000/v1/traces
+        OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http/json
+
+    Spans are normalized and appended to the database; run an assessment afterwards. Only
+    OTLP/JSON is supported in this MVP (not protobuf). Returns an OTLP success envelope.
+    """
+    if "json" not in (request.headers.get("content-type", "")).lower():
+        return JSONResponse(
+            {"error": "Only OTLP/JSON is supported (Content-Type: application/json)."},
+            status_code=415,
+        )
+    try:
+        doc = await request.json()
+    except Exception as exc:  # malformed body
+        return JSONResponse({"error": f"Invalid JSON body: {exc}"}, status_code=400)
+
+    try:
+        trace = trace_ingest.normalize_document(doc)
+        with db.session_scope() as session:
+            counts = trace_ingest.persist(trace, session, replace=False)
+    except trace_ingest.TraceIngestError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+
+    # OTLP success envelope (empty partialSuccess = fully accepted).
+    return JSONResponse({"partialSuccess": {}, "ingested": counts})

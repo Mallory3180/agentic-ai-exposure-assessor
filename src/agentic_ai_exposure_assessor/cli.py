@@ -12,6 +12,7 @@ from pathlib import Path
 import typer
 
 from . import config_loader, db, fixture_templates, report, risk_engine, trace_ingest
+from . import targets as targets_mod
 
 app = typer.Typer(
     add_completion=False,
@@ -68,6 +69,36 @@ def ingest_otlp(
         raise typer.Exit(code=1) from exc
     _echo(f"Ingested trace from {file}:")
     for name, count in counts.items():
+        _echo(f"  - {name}: {count}")
+
+
+@app.command("ingest-live")
+def ingest_live(
+    targets: Path = typer.Option(
+        ..., "--targets", "-t", help="Targets YAML (see targets.example.yml)."
+    ),
+    append: bool = typer.Option(False, "--append", help="Merge with existing inventory."),
+) -> None:
+    """Pull inventory from live target platforms declared in a targets file.
+
+    Reads connection info from the targets file and credentials from environment variables
+    (never stored in the file). Runtime traces are collected separately via the OTLP
+    receiver exposed by 'serve' (POST /v1/traces).
+    """
+    db.init_db()
+    try:
+        target_list = targets_mod.load_targets(targets)
+    except targets_mod.TargetsError as exc:
+        _echo(f"ERROR: {exc}")
+        raise typer.Exit(code=1) from exc
+    with db.session_scope() as session:
+        result = targets_mod.pull_inventory(target_list, session, replace=not append)
+    _echo("Per-target result:")
+    for target_id, status in result["targets"].items():
+        _echo(f"  - {target_id}: {status}")
+    total = sum(result["counts"].values())
+    _echo(f"Persisted {total} inventory record(s):")
+    for name, count in result["counts"].items():
         _echo(f"  - {name}: {count}")
 
 
@@ -130,6 +161,7 @@ def serve(
 
     db.init_db()
     _echo(f"Starting web UI at http://{host}:{port} (Ctrl+C to stop)")
+    _echo(f"OTLP/HTTP trace receiver listening at http://{host}:{port}/v1/traces")
     uvicorn.run(
         "agentic_ai_exposure_assessor.app:app",
         host=host,

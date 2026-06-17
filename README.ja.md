@@ -18,6 +18,12 @@ Finding は **OWASP Top 10 for Agentic Applications 2026**（ASI01〜ASI10）に
 > 本ツールは **診断専用・読み取り専用** です。実システムへの攻撃、認証回避、権限昇格、
 > 攻撃コード生成は一切行いません。提供された設定・トレースデータを取り込んでリスクを報告するだけです。
 
+> ⚙️ **動作モデルについて（重要）**: 本ツールは Promptfoo / Garak のような「能動的にプロンプトを
+> 送り込むプロービング型」ではなく、**「資産インベントリ（構成）＋ OTLP ランタイムトレース」を
+> 取り込んで評価する Tenable AI Exposure + OpenTelemetry 型**です。対象に接続して動的に診断する
+> ライブ運用（インベントリ取得 ＋ OTLP 受信）の設計・設定は
+> **[ライブ診断設計ガイド](docs/LIVE_ASSESSMENT.ja.md)** を参照してください。
+
 ---
 
 ## なぜ Docker を使わないのか
@@ -217,9 +223,10 @@ python -m agentic_ai_exposure_assessor.cli serve
 | `init-fixtures` | サンプル fixture（YAML + トレース JSON）を生成 |
 | `ingest-config` | インベントリ YAML を DB に取り込み |
 | `ingest-otlp` | OTLP 風トレース JSON を正規化して DB に取り込み（`--append` で既存保持） |
+| `ingest-live` | `targets.yml` のライブ対象からインベントリを取得（[ライブ診断ガイド](docs/LIVE_ASSESSMENT.ja.md)） |
 | `assess` | ルールエンジンを実行して Finding を生成 |
 | `export-report` | JSON / Markdown / HTML でレポート出力 |
-| `serve` | FastAPI Web UI を起動 |
+| `serve` | FastAPI Web UI ＋ OTLP/HTTP 受信エンドポイント（`/v1/traces`）を起動 |
 | `reset-db` | DB をリセット |
 
 ---

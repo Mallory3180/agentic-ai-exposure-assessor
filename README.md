@@ -19,6 +19,12 @@ Findings are mapped to the **OWASP Top 10 for Agentic Applications 2026** (ASI01
 > escalate privileges, or generate exploit code. It only ingests configuration and trace
 > data you provide and reports risks.
 
+> ⚙️ **Operating model:** Unlike Promptfoo / Garak (active prompt-probing scanners), this
+> tool is **evidence-based** — it pulls *inventory* and ingests *OTLP runtime traces*, then
+> assesses them (Tenable AI Exposure + OpenTelemetry style). For connecting to a live target
+> (dynamic inventory pull + live OTLP receiving), see the
+> **[Live Assessment guide](docs/LIVE_ASSESSMENT.ja.md)** (Japanese).
+
 ---
 
 ## Why no Docker?
@@ -211,6 +217,22 @@ python -m agentic_ai_exposure_assessor.cli serve
 
 `reset-db` drops/recreates all tables if you want a clean slate. The SQLite path can be
 overridden with the `AAEA_DB_PATH` environment variable.
+
+### Live assessment (connect to a running target)
+
+```bash
+# Pull inventory from live platforms declared in targets.yml (secrets via env vars)
+python -m agentic_ai_exposure_assessor.cli ingest-live --targets ./targets.yml
+
+# serve also exposes an OTLP/HTTP (JSON) receiver at POST /v1/traces — point an
+# instrumented target's OpenTelemetry exporter at it:
+#   OTEL_EXPORTER_OTLP_TRACES_ENDPOINT=http://127.0.0.1:8000/v1/traces
+#   OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http/json
+```
+
+The `generic_http` inventory connector is implemented; Dify / Azure OpenAI / Bedrock / MCP
+connectors are documented extension points. Full design + per-platform connection
+requirements: **[docs/LIVE_ASSESSMENT.ja.md](docs/LIVE_ASSESSMENT.ja.md)**.
 
 ---
 

@@ -24,14 +24,24 @@ class ConfigError(Exception):
     """Raised when a fixture file cannot be read or validated."""
 
 
-# (filename, top-level-key, schema, model)
-_FILE_MAP: list[tuple[str, str, type, type]] = [
-    ("agent_inventory.yml", "agents", schemas.AgentIn, models.Agent),
-    ("tool_registry.yml", "tools", schemas.ToolIn, models.Tool),
-    ("permissions.yml", "permissions", schemas.PermissionIn, models.Permission),
-    ("data_sources.yml", "data_sources", schemas.DataSourceIn, models.DataSource),
-    ("approval_policies.yml", "approval_policies", schemas.ApprovalPolicyIn, models.ApprovalPolicy),
-    ("users.yml", "users", schemas.UserIn, models.User),
+# record-type -> (schema, model). Single source for both file and live (connector) loading.
+_RECORD_MAP: dict[str, tuple[type[BaseModel], type]] = {
+    "agents": (schemas.AgentIn, models.Agent),
+    "tools": (schemas.ToolIn, models.Tool),
+    "permissions": (schemas.PermissionIn, models.Permission),
+    "data_sources": (schemas.DataSourceIn, models.DataSource),
+    "approval_policies": (schemas.ApprovalPolicyIn, models.ApprovalPolicy),
+    "users": (schemas.UserIn, models.User),
+}
+
+# (filename, top-level-key, record-type)
+_FILE_MAP: list[tuple[str, str, str]] = [
+    ("agent_inventory.yml", "agents", "agents"),
+    ("tool_registry.yml", "tools", "tools"),
+    ("permissions.yml", "permissions", "permissions"),
+    ("data_sources.yml", "data_sources", "data_sources"),
+    ("approval_policies.yml", "approval_policies", "approval_policies"),
+    ("users.yml", "users", "users"),
 ]
 
 
@@ -99,14 +109,38 @@ def load_directory(fixtures_dir: Path, session: Session, *, replace: bool = True
     if not fixtures_dir.exists():
         raise ConfigError(f"Fixtures directory does not exist: {fixtures_dir}")
 
-    counts: dict[str, int] = {}
-    for filename, top_key, schema, model in _FILE_MAP:
+    records_by_type: dict[str, list[dict[str, Any]]] = {}
+    for filename, top_key, record_type in _FILE_MAP:
         path = fixtures_dir / filename
         if not path.exists():
             continue
         data = _read_yaml(path)
-        records = _extract_records(data, top_key, path)
-        validated = _validate(records, schema, path)
+        records_by_type[record_type] = _extract_records(data, top_key, path)
+
+    return load_records(records_by_type, session, replace=replace, source=str(fixtures_dir))
+
+
+def load_records(
+    records_by_type: dict[str, list[dict[str, Any]]],
+    session: Session,
+    *,
+    replace: bool = True,
+    source: str = "live",
+) -> dict[str, int]:
+    """Validate and persist already-parsed inventory records (from files or a live connector).
+
+    ``records_by_type`` maps a record type (``agents``/``tools``/...) to a list of raw dicts.
+    Unknown record types raise :class:`ConfigError`. Returns a mapping of model name -> count.
+    """
+    counts: dict[str, int] = {}
+    for record_type, records in records_by_type.items():
+        if record_type not in _RECORD_MAP:
+            raise ConfigError(
+                f"{source}: unknown record type '{record_type}' "
+                f"(expected one of {sorted(_RECORD_MAP)})"
+            )
+        schema, model = _RECORD_MAP[record_type]
+        validated = _validate(records or [], schema, Path(source))
 
         if replace:
             session.exec(delete(model))

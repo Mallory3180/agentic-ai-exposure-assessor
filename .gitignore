@@ -27,3 +27,6 @@ Thumbs.db
 
 # Claude Code personal/local settings (keep out of shared history)
 .claude/settings.local.json
+
+# Live target connection config (user-specific; the *.example.yml is committed)
+/targets.yml

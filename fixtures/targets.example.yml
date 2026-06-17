@@ -1,0 +1,59 @@
+# Live assessment targets (example).
+#
+# Copy to ./targets.yml and edit. Secrets are NEVER stored here: `token_env` names an
+# environment variable that holds the credential (export it in your shell before running).
+#
+# Inventory is pulled via the platform connector (`ingest-live`).
+# Runtime traces are collected separately by pointing the target's OpenTelemetry / OTLP
+# exporter at this tool's receiver:  http://127.0.0.1:8000/v1/traces  (started by `serve`).
+targets:
+  # Fully working connector: any HTTP(S) endpoint returning fixtures-shaped JSON
+  # ({"agents":[...], "tools":[...], "permissions":[...], "data_sources":[...]}).
+  - id: internal-agent-registry
+    platform: generic_http
+    description: Internal JSON inventory endpoint.
+    enabled: false
+    inventory:
+      base_url: https://agent-registry.internal.example/api/inventory
+      token_env: AGENT_REGISTRY_TOKEN   # export AGENT_REGISTRY_TOKEN=... before running
+      verify_tls: true
+    telemetry:
+      mode: otlp_push                   # target pushes OTLP to our /v1/traces receiver
+
+  # --- Cloud connectors: documented extension points (not yet implemented in the MVP) ---
+  - id: dify-prod
+    platform: dify
+    enabled: false
+    inventory:
+      base_url: https://api.dify.ai/v1
+      token_env: DIFY_API_KEY
+    telemetry:
+      mode: otlp_push
+
+  - id: azure-openai-prod
+    platform: azure_openai
+    enabled: false
+    inventory:
+      endpoint: https://my-resource.openai.azure.com
+      api_version: "2024-10-21"
+      token_env: AZURE_OPENAI_API_KEY
+    telemetry:
+      mode: otlp_push
+
+  - id: bedrock-agents
+    platform: bedrock
+    enabled: false
+    inventory:
+      region: us-east-1
+      # AWS credentials come from the standard AWS_* environment / role chain.
+    telemetry:
+      mode: otlp_push
+
+  - id: payments-mcp
+    platform: mcp
+    enabled: false
+    inventory:
+      server_url: https://mcp.internal.example/sse
+      token_env: MCP_TOKEN
+    telemetry:
+      mode: otlp_push

@@ -97,6 +97,24 @@ class UserIn(_Base):
 
 
 # --------------------------------------------------------------------------- #
+# Live target / connection schemas                                            #
+# --------------------------------------------------------------------------- #
+class TargetIn(_Base):
+    """A live target platform to assess (inventory pull + telemetry receive).
+
+    Secrets are NOT stored here: ``inventory.token_env`` names an environment variable
+    that holds the credential, so the targets file can be committed safely.
+    """
+
+    target_id: str = Field(alias="id")
+    platform: str = "generic_http"  # generic_http / dify / azure_openai / bedrock / mcp
+    description: str = ""
+    enabled: bool = True
+    inventory: dict[str, Any] = Field(default_factory=dict)
+    telemetry: dict[str, Any] = Field(default_factory=dict)
+
+
+# --------------------------------------------------------------------------- #
 # Rule engine DTOs                                                             #
 # --------------------------------------------------------------------------- #
 class FindingDraft(_Base):
