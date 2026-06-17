@@ -1,5 +1,7 @@
 # Agentic AI Exposure Assessor
 
+**English** | [日本語 (Japanese)](README.ja.md)
+
 A **defensive** diagnostic / visualization tool for Agentic AI applications. It combines:
 
 - **Tenable-AI-Exposure-style inventory & exposure management** — agents, users, tools,
