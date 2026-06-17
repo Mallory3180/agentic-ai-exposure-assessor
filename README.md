@@ -43,6 +43,9 @@ Windows (`C:\...`) and POSIX-style (`C:/...`) paths work. Outputs go to relative
 - **Python**: 3.12 or newer
 - No Docker required.
 
+> 🔰 New to the command line? A detailed, step-by-step beginner's guide (in Japanese) is
+> available: **[はじめてのセットアップ・実行ガイド](docs/GETTING_STARTED.ja.md)**.
+
 ---
 
 ## Setup (Windows + Git Bash)
