@@ -1,0 +1,106 @@
+# Agent inventory — Tenable-AI-Exposure-style asset list.
+# Each agent is an asset; misconfigurations become Findings during assessment.
+agents:
+  - id: customer-support-agent
+    name: Customer Support Agent
+    description: Handles customer inquiries and sends follow-up emails.
+    owner: support-team@example.com
+    environment: prod
+    platform: custom
+    model_provider: anthropic
+    model_name: claude-opus-4-8
+    public_exposure: internal
+    trust_level: medium
+    allowed_tools:
+      - search_customer
+      - send_email
+    connected_data_sources:
+      - customer_db
+    connected_mcp_servers: []
+    tags: [support, email]
+
+  - id: devops-agent
+    name: DevOps Automation Agent
+    description: Runs operational scripts and manages files on build hosts.
+    owner: devops@example.com
+    environment: prod
+    platform: custom
+    model_provider: anthropic
+    model_name: claude-opus-4-8
+    public_exposure: restricted
+    trust_level: high
+    allowed_tools:
+      - run_shell
+      - read_file
+      - write_file
+    connected_data_sources: []
+    connected_mcp_servers:
+      - infra-mcp
+    tags: [devops, automation]
+
+  - id: orchestrator-agent
+    name: Orchestrator Agent
+    description: Coordinates work and delegates to other agents.
+    owner: platform@example.com
+    environment: prod
+    platform: custom
+    model_provider: anthropic
+    model_name: claude-opus-4-8
+    public_exposure: internal
+    trust_level: high
+    allowed_tools: []
+    connected_data_sources: []
+    connected_mcp_servers: []
+    tags: [orchestration]
+
+  - id: public-web-agent
+    name: Public Web Agent
+    description: Public-facing assistant exposed on the marketing site.
+    owner: web-team@example.com
+    environment: prod
+    platform: custom
+    model_provider: anthropic
+    model_name: claude-haiku-4-5
+    public_exposure: public
+    trust_level: low
+    allowed_tools:
+      - web_search
+      - run_shell
+    connected_data_sources:
+      - web_knowledge
+    connected_mcp_servers: []
+    tags: [public, web]
+
+  - id: analytics-agent
+    name: Analytics Agent
+    description: Runs database analytics queries.
+    owner: data-team@example.com
+    environment: prod
+    platform: custom
+    model_provider: anthropic
+    model_name: claude-sonnet-4-6
+    public_exposure: internal
+    trust_level: medium
+    allowed_tools:
+      - query_database
+    connected_data_sources:
+      - customer_db
+    connected_mcp_servers: []
+    tags: [analytics]
+
+  # Intentionally missing an owner -> triggers ASI10 (rogue/unmanaged).
+  - id: legacy-batch-agent
+    name: Legacy Batch Agent
+    description: Old batch job agent nobody clearly owns.
+    owner: ""
+    environment: prod
+    platform: custom
+    model_provider: unknown
+    model_name: unknown
+    public_exposure: internal
+    trust_level: medium
+    allowed_tools:
+      - read_file
+    connected_data_sources: []
+    connected_mcp_servers: []
+    tags: [legacy]

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agentic AI Exposure Report - {{ data.run.name }}</title>
+  <style>
+    :root { --crit:#b00020; --high:#d35400; --med:#b8860b; --low:#2e7d32; --info:#555; }
+    body { font-family: system-ui, Segoe UI, Arial, sans-serif; margin: 0; color: #1a1a1a;
+           background: #f6f7f9; }
+    header { background: #0d1b2a; color: #fff; padding: 20px 28px; }
+    header h1 { margin: 0 0 6px; font-size: 22px; }
+    main { padding: 20px 28px; max-width: 1100px; margin: 0 auto; }
+    section { background: #fff; border: 1px solid #e2e6ea; border-radius: 8px;
+              padding: 16px 20px; margin-bottom: 18px; }
+    h2 { font-size: 18px; border-bottom: 2px solid #eee; padding-bottom: 6px; }
+    table { border-collapse: collapse; width: 100%; font-size: 13px; }
+    th, td { border: 1px solid #e2e6ea; padding: 6px 8px; text-align: left; vertical-align: top; }
+    th { background: #f0f2f5; }
+    .cards { display: flex; gap: 12px; flex-wrap: wrap; }
+    .card { flex: 1 1 140px; background: #0d1b2a; color: #fff; border-radius: 8px;
+            padding: 12px 14px; }
+    .card .num { font-size: 26px; font-weight: 700; }
+    .sev { font-weight: 700; text-transform: uppercase; font-size: 11px; padding: 2px 6px;
+           border-radius: 4px; color: #fff; }
+    .sev-critical { background: var(--crit); } .sev-high { background: var(--high); }
+    .sev-medium { background: var(--med); } .sev-low { background: var(--low); }
+    .sev-info { background: var(--info); }
+    pre { background: #0d1b2a; color: #d6e2f0; padding: 10px; border-radius: 6px;
+          overflow-x: auto; font-size: 12px; }
+    .finding { border-left: 4px solid #ccc; padding-left: 12px; margin-bottom: 14px; }
+    .muted { color: #666; font-size: 12px; }
+  </style>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "strict" });
+  </script>
+</head>
+<body>
+  <header>
+    <h1>Agentic AI Exposure Assessment</h1>
+    <div class="muted" style="color:#cdd6e0">Run: {{ data.run.name }} &middot; {{ data.run.created_at }}</div>
+  </header>
+  <main>
+    <section>
+      <h2>1. Executive Summary</h2>
+      <div class="cards">
+        <div class="card"><div class="num">{{ data.run.total_agents }}</div><div>Agents</div></div>
+        <div class="card"><div class="num">{{ data.run.total_tools }}</div><div>Tools</div></div>
+        <div class="card"><div class="num">{{ data.run.total_findings }}</div><div>Findings</div></div>
+        <div class="card"><div class="num">{{ data.run.risk_score }}</div><div>Risk Score</div></div>
+      </div>
+      <p class="muted">Severity:
+        {% for sev, count in data.severity_counts.items() %}{{ sev }}={{ count }}{% if not loop.last %}, {% endif %}{% endfor %}
+      </p>
+    </section>
+
+    <section>
+      <h2>3. Agent Inventory</h2>
+      <table>
+        <tr><th>Agent</th><th>Owner</th><th>Exposure</th><th>Trust</th><th>Model</th>
+            <th>Allowed Tools</th><th>Risk</th></tr>
+        {% for a in data.agents %}
+        <tr><td>{{ a.agent_id }}</td><td>{{ a.owner or "(none)" }}</td>
+            <td>{{ a.public_exposure }}</td><td>{{ a.trust_level }}</td><td>{{ a.model }}</td>
+            <td>{{ a.allowed_tools | join(", ") }}</td>
+            <td>{{ data.agent_scores.get(a.agent_id, 0) }}</td></tr>
+        {% endfor %}
+      </table>
+    </section>
+
+    <section>
+      <h2>4. Tool &amp; Permission Matrix</h2>
+      <table>
+        <tr><th>Tool</th><th>Category</th><th>Risk</th><th>Approval</th><th>Sandbox</th><th>Scopes</th></tr>
+        {% for t in data.tools %}
+        <tr><td>{{ t.tool_id }}</td><td>{{ t.category }}</td><td>{{ t.risk_level }}</td>
+            <td>{{ t.requires_approval }}</td><td>{{ t.sandbox_required }}</td>
+            <td>{{ t.allowed_scopes | join(", ") }}</td></tr>
+        {% endfor %}
+      </table>
+    </section>
+
+    <section>
+      <h2>5. Runtime Trace Analysis</h2>
+      {% for trace_id, seq in data.sequences.items() %}
+        <h3>Trace {{ trace_id }}</h3>
+        <table>
+          <tr><th>#</th><th>Agent</th><th>Tool</th><th>Status</th><th>Approval</th><th>TLS</th></tr>
+          {% for s in seq %}
+          <tr><td>{{ s.index }}</td><td>{{ s.agent }}</td><td>{{ s.tool }}</td>
+              <td>{{ s.status }}</td>
+              <td>{{ "observed" if s.approval_observed else (s.approval_status or "none") }}</td>
+              <td>{{ "yes" if s.tls_observed else "no" }}</td></tr>
+          {% endfor %}
+        </table>
+        {% set g = data.graphs.get(trace_id, {}) %}
+        {% if g.tool_sequence %}<div class="mermaid">{{ g.tool_sequence }}</div>{% endif %}
+        {% if g.inter_agent %}<div class="mermaid">{{ g.inter_agent }}</div>{% endif %}
+      {% endfor %}
+    </section>
+
+    <section>
+      <h2>7. OWASP Agentic AI Top 10 Mapping</h2>
+      <table>
+        <tr><th>Code</th><th>Category</th><th>Findings</th><th>Max Severity</th></tr>
+        {% for m in data.owasp_mapping %}
+        <tr><td>{{ m.code }}</td><td>{{ m.title }}</td><td>{{ m.count }}</td>
+            <td>{{ m.max_severity }}</td></tr>
+        {% endfor %}
+      </table>
+    </section>
+
+    <section>
+      <h2>8. Findings</h2>
+      {% for f in data.findings %}
+      <div class="finding">
+        <span class="sev sev-{{ f.severity }}">{{ f.severity }}</span>
+        <strong>{{ f.title }}</strong>
+        <div class="muted">{{ f.owasp_category }} {{ f.owasp_title }} &middot; rule {{ f.rule_id }}
+          &middot; risk {{ f.risk_score }} (L{{ f.likelihood }} x I{{ f.impact }} x C{{ f.confidence }})</div>
+        <p>{{ f.description }}</p>
+        <p><em>Remediation:</em> {{ f.remediation }}</p>
+        <pre>{{ f.evidence | tojson(indent=2) }}</pre>
+      </div>
+      {% endfor %}
+    </section>
+  </main>
+</body>
+</html>

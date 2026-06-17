@@ -1,0 +1,15 @@
+# Human principals (optional in the MVP).
+users:
+  - id: u-001
+    display_name: Alice Operator
+    email: alice@example.com
+    department: Support
+    role: human_operator
+    groups: [support, approvers]
+
+  - id: u-002
+    display_name: Bob Engineer
+    email: bob@example.com
+    department: Platform
+    role: security_engineer
+    groups: [security, approvers]

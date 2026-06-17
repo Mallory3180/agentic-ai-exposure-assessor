@@ -1,0 +1,34 @@
+# Data sources — RAG / memory / DB / file / web connections.
+data_sources:
+  - id: customer_db
+    name: customer_db
+    type: database
+    classification: confidential
+    contains_pii: true
+    contains_confidential: true
+    owner: data-team@example.com
+    connected_agents: [customer-support-agent, analytics-agent]
+    access_scope: db.read
+    trust: trusted
+
+  - id: web_knowledge
+    name: web_knowledge
+    type: web
+    classification: public
+    contains_pii: false
+    contains_confidential: false
+    owner: web-team@example.com
+    connected_agents: [public-web-agent, customer-support-agent]
+    access_scope: web.read
+    trust: untrusted
+
+  - id: agent_memory
+    name: agent_memory
+    type: memory
+    classification: internal
+    contains_pii: false
+    contains_confidential: false
+    owner: platform@example.com
+    connected_agents: [orchestrator-agent, customer-support-agent]
+    access_scope: memory.rw
+    trust: trusted

@@ -1,0 +1,51 @@
+# Permission grants — principal (agent/user/role) -> tool, with scope and level.
+permissions:
+  - id: perm-001
+    principal_type: agent
+    principal_id: customer-support-agent
+    tool_id: search_customer
+    scope: crm.read
+    permission_level: read
+    source: config
+
+  # Excessive: write level on a low-risk read tool -> ASI03.
+  - id: perm-002
+    principal_type: agent
+    principal_id: customer-support-agent
+    tool_id: search_customer
+    scope: crm.read
+    permission_level: write
+    source: config
+
+  # Over-broad wildcard scope -> ASI03.
+  - id: perm-003
+    principal_type: agent
+    principal_id: customer-support-agent
+    tool_id: send_email
+    scope: mail.*
+    permission_level: write
+    source: config
+
+  - id: perm-004
+    principal_type: agent
+    principal_id: devops-agent
+    tool_id: run_shell
+    scope: shell.exec
+    permission_level: admin
+    source: config
+
+  - id: perm-005
+    principal_type: agent
+    principal_id: analytics-agent
+    tool_id: query_database
+    scope: db.read
+    permission_level: read
+    source: config
+
+  - id: perm-006
+    principal_type: agent
+    principal_id: public-web-agent
+    tool_id: web_search
+    scope: web.read
+    permission_level: read
+    source: config

@@ -1,0 +1,62 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agentic-ai-exposure-assessor"
+version = "0.1.0"
+description = "Defensive diagnostic tool that inventories Agentic AI assets and assesses runtime traces against the OWASP Top 10 for Agentic Applications 2026."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [{ name = "Agentic AI Exposure Assessor" }]
+keywords = ["agentic-ai", "security", "owasp", "otlp", "exposure", "ai-security"]
+
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+    "typer>=0.12",
+    "pydantic>=2.6",
+    "sqlmodel>=0.0.16",
+    "pyyaml>=6.0",
+    "jinja2>=3.1",
+    "rich>=13.7",
+    "python-multipart>=0.0.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+    "mypy>=1.9",
+    "httpx>=0.27",
+    "types-PyYAML>=6.0",
+]
+
+[project.scripts]
+agentic-ai-exposure-assessor = "agentic_ai_exposure_assessor.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/agentic_ai_exposure_assessor"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+# Generated file: embedded fixture content has intentionally long literal lines.
+extend-exclude = ["src/agentic_ai_exposure_assessor/fixture_templates.py"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "W"]
+ignore = ["B008"]  # Typer uses function calls in argument defaults
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+plugins = []
+disallow_untyped_defs = false

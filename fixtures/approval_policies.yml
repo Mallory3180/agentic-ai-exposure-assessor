@@ -1,0 +1,25 @@
+# Human-in-the-loop approval policies per tool.
+approval_policies:
+  - id: ap-send-email
+    tool_id: send_email
+    required: true
+    approver_role: human_operator
+    condition: external_recipient == true
+    timeout_seconds: 300
+    bypass_allowed: false
+
+  - id: ap-run-shell
+    tool_id: run_shell
+    required: true
+    approver_role: security_engineer
+    condition: always
+    timeout_seconds: 600
+    bypass_allowed: false
+
+  - id: ap-write-file
+    tool_id: write_file
+    required: true
+    approver_role: human_operator
+    condition: always
+    timeout_seconds: 300
+    bypass_allowed: false

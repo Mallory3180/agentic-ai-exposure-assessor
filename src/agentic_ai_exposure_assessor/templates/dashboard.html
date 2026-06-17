@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agentic AI Exposure Assessor</title>
+  <style>
+    :root { --crit:#b00020; --high:#d35400; --med:#b8860b; --low:#2e7d32; --info:#555; }
+    body { font-family: system-ui, Segoe UI, Arial, sans-serif; margin: 0; color: #1a1a1a;
+           background: #f6f7f9; }
+    header { background: #0d1b2a; color: #fff; padding: 16px 24px; display:flex;
+             align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
+    header h1 { margin: 0; font-size: 20px; }
+    nav a { color:#cdd6e0; margin-left:14px; text-decoration:none; font-size:14px; }
+    nav a:hover { color:#fff; text-decoration:underline; }
+    main { padding: 20px 24px; max-width: 1150px; margin: 0 auto; }
+    section { background:#fff; border:1px solid #e2e6ea; border-radius:8px;
+              padding:14px 18px; margin-bottom:16px; }
+    h2 { font-size:17px; border-bottom:2px solid #eee; padding-bottom:6px; }
+    table { border-collapse: collapse; width: 100%; font-size: 13px; }
+    th, td { border: 1px solid #e2e6ea; padding: 6px 8px; text-align: left; vertical-align: top; }
+    th { background:#f0f2f5; }
+    .cards { display:flex; gap:12px; flex-wrap:wrap; }
+    .card { flex:1 1 120px; background:#0d1b2a; color:#fff; border-radius:8px; padding:12px 14px; }
+    .card .num { font-size:24px; font-weight:700; }
+    .sev { font-weight:700; text-transform:uppercase; font-size:11px; padding:2px 6px;
+           border-radius:4px; color:#fff; }
+    .sev-critical{background:var(--crit);} .sev-high{background:var(--high);}
+    .sev-medium{background:var(--med);} .sev-low{background:var(--low);} .sev-info{background:var(--info);}
+    form.inline { display:inline; }
+    button { background:#1b3a5b; color:#fff; border:none; padding:8px 14px; border-radius:6px;
+             cursor:pointer; font-size:13px; }
+    button:hover { background:#27557f; }
+    .muted { color:#666; font-size:12px; }
+    .bar { height:14px; background:#27557f; border-radius:3px; }
+  </style>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
+    mermaid.initialize({ startOnLoad: true, securityLevel: "strict" });
+  </script>
+</head>
+<body>
+  <header>
+    <h1>Agentic AI Exposure Assessor</h1>
+    <nav>
+      <a href="/">Dashboard</a>
+      <a href="/agents">Agents</a>
+      <a href="/tools">Tools</a>
+      <a href="/traces">Traces</a>
+      <a href="/findings">Findings</a>
+      <a href="/owasp">OWASP</a>
+      <a href="/reports/latest">Report</a>
+      <a href="/docs">API</a>
+    </nav>
+  </header>
+  <main>
+    <section>
+      <div class="cards">
+        <div class="card"><div class="num">{{ data.run.total_agents }}</div><div>Agents</div></div>
+        <div class="card"><div class="num">{{ data.run.total_tools }}</div><div>Tools</div></div>
+        <div class="card"><div class="num">{{ data.run.total_findings }}</div><div>Findings</div></div>
+        <div class="card"><div class="num">{{ data.run.risk_score }}</div><div>Risk Score</div></div>
+      </div>
+      <p class="muted">Latest run: {{ data.run.name }} &middot; {{ data.run.created_at or "not yet run" }}</p>
+      <form class="inline" method="post" action="/ingest/config"><button>Ingest fixtures</button></form>
+      <form class="inline" method="post" action="/ingest/traces"><button>Ingest sample trace</button></form>
+      <form class="inline" method="post" action="/assess"><button>Run assessment</button></form>
+    </section>
+
+    <section>
+      <h2>Agent Risk Scores</h2>
+      <table>
+        <tr><th>Agent</th><th>Risk Score</th><th></th></tr>
+        {% for agent, score in data.agent_scores_sorted %}
+        <tr><td>{{ agent }}</td><td>{{ score }}</td>
+            <td><div class="bar" style="width: {{ [score, 300] | min }}px;"></div></td></tr>
+        {% endfor %}
+      </table>
+    </section>
+
+    <section>
+      <h2>OWASP Category Counts</h2>
+      <table>
+        <tr><th>Code</th><th>Category</th><th>Findings</th><th>Max Severity</th></tr>
+        {% for m in data.owasp_mapping %}
+        <tr><td>{{ m.code }}</td><td>{{ m.title }}</td><td>{{ m.count }}</td>
+            <td>{{ m.max_severity }}</td></tr>
+        {% endfor %}
+      </table>
+    </section>
+
+    <section>
+      <h2>High-Risk Tools</h2>
+      <table>
+        <tr><th>Tool</th><th>Category</th><th>Risk</th></tr>
+        {% for t in data.high_risk_tools %}
+        <tr><td>{{ t.tool_id }}</td><td>{{ t.category }}</td><td>{{ t.risk_level }}</td></tr>
+        {% endfor %}
+      </table>
+    </section>
+
+    <section>
+      <h2>Tools Executed Without Approval</h2>
+      {% if data.unapproved_calls %}
+      <table>
+        <tr><th>Agent</th><th>Tool</th><th>Trace</th></tr>
+        {% for c in data.unapproved_calls %}
+        <tr><td>{{ c.agent }}</td><td>{{ c.tool }}</td><td>{{ c.trace_id }}</td></tr>
+        {% endfor %}
+      </table>
+      {% else %}<p class="muted">None.</p>{% endif %}
+    </section>
+
+    <section>
+      <h2>Unknown Agents / Tools</h2>
+      <p><strong>Unknown agents:</strong> {{ data.unknown_agents | join(", ") or "none" }}</p>
+      <p><strong>Unknown tools:</strong> {{ data.unknown_tools | join(", ") or "none" }}</p>
+    </section>
+
+    <section>
+      <h2>Top Findings</h2>
+      {% for f in data.findings[:10] %}
+      <p><span class="sev sev-{{ f.severity }}">{{ f.severity }}</span>
+         <strong>{{ f.title }}</strong>
+         <span class="muted">({{ f.owasp_category }}, risk {{ f.risk_score }})</span></p>
+      {% else %}
+      <p class="muted">No findings yet. Run an assessment.</p>
+      {% endfor %}
+    </section>
+
+    <section>
+      <h2>Trace Graphs</h2>
+      {% for trace_id, g in data.graphs.items() %}
+        <h3 class="muted">Trace {{ trace_id }}</h3>
+        {% if g.tool_sequence %}<div class="mermaid">{{ g.tool_sequence }}</div>{% endif %}
+        {% if g.inter_agent %}<div class="mermaid">{{ g.inter_agent }}</div>{% endif %}
+      {% endfor %}
+    </section>
+  </main>
+</body>
+</html>

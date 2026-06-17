@@ -1,0 +1,39 @@
+{
+  "description": "Promptfoo-style trajectory export (simplified). Demonstrates the alternate flat-span input shape that trace_ingest.py also accepts.",
+  "spans": [
+    {
+      "trace_id": "promptfoo-eval-001",
+      "span_id": "pf-0001",
+      "parent_span_id": "",
+      "name": "tool_call",
+      "kind": "CLIENT",
+      "start_time": 1,
+      "end_time": 2,
+      "status": "OK",
+      "attributes": {
+        "agent.name": "customer-support-agent",
+        "tool.name": "send_email",
+        "tool.arguments": { "to": "newuser@example.com", "subject": "Welcome" },
+        "approval.required": true,
+        "approval.status": "approved",
+        "credential.scope": "mail.send"
+      }
+    },
+    {
+      "trace_id": "promptfoo-eval-001",
+      "span_id": "pf-0002",
+      "parent_span_id": "",
+      "name": "tool_call",
+      "kind": "CLIENT",
+      "start_time": 3,
+      "end_time": 4,
+      "status": "OK",
+      "attributes": {
+        "agent.name": "customer-support-agent",
+        "tool.name": "search_customer",
+        "tool.arguments": { "query": "order #4821" },
+        "credential.scope": "crm.read"
+      }
+    }
+  ]
+}

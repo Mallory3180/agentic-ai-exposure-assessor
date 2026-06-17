@@ -1,0 +1,78 @@
+# Tool registry — every tool an agent may invoke, with its risk profile.
+tools:
+  - id: search_customer
+    name: Search Customer
+    description: Read-only lookup of a customer record.
+    category: read_only
+    risk_level: low
+    requires_approval: false
+    allowed_scopes: [crm.read]
+    dangerous_capabilities: []
+    sandbox_required: false
+    connector_name: crm
+
+  - id: send_email
+    name: Send Email
+    description: Sends an email to a recipient.
+    category: email
+    risk_level: high
+    requires_approval: true
+    allowed_scopes: [mail.send]
+    dangerous_capabilities: [external_communication]
+    sandbox_required: false
+    connector_name: smtp
+
+  - id: run_shell
+    name: Run Shell Command
+    description: Executes an arbitrary shell command on a host.
+    category: shell
+    risk_level: critical
+    requires_approval: true
+    allowed_scopes: [shell.exec]
+    dangerous_capabilities: [arbitrary_code_execution, file_system_access]
+    sandbox_required: true
+    connector_name: host
+
+  - id: read_file
+    name: Read File
+    description: Reads a file from disk.
+    category: file_system
+    risk_level: medium
+    requires_approval: false
+    allowed_scopes: [fs.read]
+    dangerous_capabilities: [file_system_access]
+    sandbox_required: false
+    connector_name: host
+
+  - id: write_file
+    name: Write File
+    description: Writes a file to disk.
+    category: file_system
+    risk_level: high
+    requires_approval: true
+    allowed_scopes: [fs.write]
+    dangerous_capabilities: [file_system_access]
+    sandbox_required: true
+    connector_name: host
+
+  - id: query_database
+    name: Query Database
+    description: Runs a SQL query against the analytics database.
+    category: database
+    risk_level: medium
+    requires_approval: false
+    allowed_scopes: [db.read]
+    dangerous_capabilities: [data_access]
+    sandbox_required: false
+    connector_name: postgres
+
+  - id: web_search
+    name: Web Search
+    description: Performs an external web search.
+    category: external_api
+    risk_level: medium
+    requires_approval: false
+    allowed_scopes: [web.read]
+    dangerous_capabilities: [external_communication]
+    sandbox_required: false
+    connector_name: serp
