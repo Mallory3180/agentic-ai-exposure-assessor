@@ -234,6 +234,20 @@ The `generic_http` inventory connector is implemented; Dify / Azure OpenAI / Bed
 connectors are documented extension points. Full design + per-platform connection
 requirements: **[docs/LIVE_ASSESSMENT.ja.md](docs/LIVE_ASSESSMENT.ja.md)**.
 
+`ingest-otlp` also imports **exported** telemetry in several formats (auto-detected), which
+is often the most practical path in enterprise environments:
+
+```bash
+python -m agentic_ai_exposure_assessor.cli ingest-otlp --file ./otel_export.ndjson    # OTLP/JSON or NDJSON
+python -m agentic_ai_exposure_assessor.cli ingest-otlp --file ./jaeger.json --format jaeger
+python -m agentic_ai_exposure_assessor.cli ingest-otlp --file ./langsmith.json --format langsmith
+```
+
+Supported `--format`: `auto` | `otlp` (incl. OTel Collector `file` exporter / NDJSON) |
+`jaeger` | `langsmith` | `simplified`. Customers can carry assessor signals
+(`approval.status`, `credential.scope`, `tls.protocol.name`, ...) as Jaeger tags or
+LangSmith metadata.
+
 ### LangGraph support & PoC
 
 The OTLP ingester natively understands **LangGraph / LangChain (OpenInference)** span

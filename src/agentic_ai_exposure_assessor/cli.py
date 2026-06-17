@@ -11,7 +11,15 @@ from pathlib import Path
 
 import typer
 
-from . import config_loader, db, fixture_templates, report, risk_engine, trace_ingest
+from . import (
+    config_loader,
+    db,
+    fixture_templates,
+    report,
+    risk_engine,
+    trace_adapters,
+    trace_ingest,
+)
 from . import targets as targets_mod
 
 app = typer.Typer(
@@ -56,18 +64,28 @@ def ingest_config(
 
 @app.command("ingest-otlp")
 def ingest_otlp(
-    file: Path = typer.Option(..., "--file", help="OTLP-style trace JSON file."),
+    file: Path = typer.Option(..., "--file", help="Exported trace/telemetry file."),
+    format: str = typer.Option(
+        "auto",
+        "--format",
+        help="Telemetry format: auto | otlp | jaeger | langsmith | simplified.",
+    ),
     append: bool = typer.Option(False, "--append", help="Keep existing runtime data."),
 ) -> None:
-    """Load an OTLP-style trace JSON and normalize it into the database."""
+    """Load exported telemetry and normalize it into the database.
+
+    Supports native OTLP/JSON (incl. OTel Collector 'file' exporter / NDJSON), Jaeger query
+    JSON, and LangSmith run exports. Use --format to override auto-detection.
+    """
     db.init_db()
     try:
+        trace = trace_adapters.load_trace_any(file, fmt=format)
         with db.session_scope() as session:
-            counts = trace_ingest.ingest_file(file, session, replace=not append)
+            counts = trace_ingest.persist(trace, session, replace=not append)
     except trace_ingest.TraceIngestError as exc:
         _echo(f"ERROR: {exc}")
         raise typer.Exit(code=1) from exc
-    _echo(f"Ingested trace from {file}:")
+    _echo(f"Ingested trace from {file} (format={format}):")
     for name, count in counts.items():
         _echo(f"  - {name}: {count}")
 

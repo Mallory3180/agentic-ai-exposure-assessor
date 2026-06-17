@@ -116,6 +116,41 @@ export OTEL_EXPORTER_OTLP_TRACES_PROTOCOL=http/json
 
 ---
 
+## 4-bis. 実トレースのオフライン取り込み（A-1）
+
+ライブ受信（②）の常時接続が難しい企業環境では、**顧客が既に持っているテレメトリをエクスポート
+してファイルで取り込む**方が現実的なことが多いです。`ingest-otlp` は複数フォーマットを
+**自動判定**して取り込みます（`--format` で明示も可能）。
+
+```bash
+python -m agentic_ai_exposure_assessor.cli ingest-otlp --file ./export.json            # 自動判定
+python -m agentic_ai_exposure_assessor.cli ingest-otlp --file ./jaeger.json --format jaeger
+python -m agentic_ai_exposure_assessor.cli ingest-otlp --file ./langsmith.json --format langsmith
+python -m agentic_ai_exposure_assessor.cli ingest-otlp --file ./otel.ndjson --append    # NDJSON 追記
+```
+
+| 形式 (`--format`) | エクスポート元の例 | 取得方法の目安 |
+| --- | --- | --- |
+| `otlp` | OpenTelemetry Collector の **`file` exporter**、OTLP/JSON 出力 | Collector に file exporter を追加 → JSON/NDJSON を回収 |
+| `jaeger` | Jaeger / Tempo / Grafana | Jaeger クエリAPI `GET /api/traces?...` の JSON を保存 |
+| `langsmith` | LangSmith（LangChain/LangGraph） | runs を API/UI でバルクエクスポート（`{"runs":[...]}` または配列） |
+| `simplified` | 本ツール独自のフラット span | 既存サンプル形式 |
+
+> 💡 顧客は、本ツール固有の属性（`approval.status`、`credential.scope`、`tls.protocol.name`、
+> `memory.operation`、`source.trust` など）を **Jaeger のタグ** や **LangSmith の metadata**
+> に載せておけば、そのまま診断に反映されます。
+
+### A-1 が現実的になる条件・限界（正直な整理）
+
+- ✅ **計装済み**（OTel / OpenInference / LangSmith）なら、エクスポート→取り込みは現実的で、
+  ライブ常時接続より企業環境で採用しやすい。
+- ⚠️ **未計装の独自アプリ**は、一度きりの計装（OpenInference 自動計装で数行）が必要。
+- ⚠️ **非OTLP独自形式**（Bedrock/Azure/Dify の独自ログ等）は、本アダプタに変換ルールの追加実装が必要。
+- ⚠️ **カバレッジ**は「実際に通った経路」しか見えない。代表的な業務シナリオを流した記録が前提。
+- ❌ **手書きの模擬トレース**は実システムを保証しない（デモ/受け入れ確認専用）。
+
+---
+
 ## 5. プラットフォーム別・必要接続情報
 
 | platform | インベントリ取得 | 必要な接続情報 | 実装状況 |

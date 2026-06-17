@@ -222,7 +222,7 @@ python -m agentic_ai_exposure_assessor.cli serve
 | --- | --- |
 | `init-fixtures` | サンプル fixture（YAML + トレース JSON）を生成 |
 | `ingest-config` | インベントリ YAML を DB に取り込み |
-| `ingest-otlp` | OTLP 風トレース JSON を正規化して DB に取り込み（`--append` で既存保持） |
+| `ingest-otlp` | エクスポート済みトレースを取り込み（OTLP / Jaeger / LangSmith / NDJSON を `--format auto` で自動判定、`--append` 対応）。[A-1の詳細](docs/LIVE_ASSESSMENT.ja.md#4-bis-実トレースのオフライン取り込みa-1) |
 | `ingest-live` | `targets.yml` のライブ対象からインベントリを取得（[ライブ診断ガイド](docs/LIVE_ASSESSMENT.ja.md)） |
 | `assess` | ルールエンジンを実行して Finding を生成 |
 | `export-report` | JSON / Markdown / HTML でレポート出力 |
