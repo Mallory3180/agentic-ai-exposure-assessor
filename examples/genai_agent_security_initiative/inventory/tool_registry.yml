@@ -1,0 +1,44 @@
+tools:
+  - id: execute_command
+    name: Execute Bash Command
+    description: Runs an arbitrary shell command (subprocess, shell=True).
+    category: shell
+    risk_level: critical
+    requires_approval: true
+    allowed_scopes: [shell.exec]
+    dangerous_capabilities: [arbitrary_code_execution, file_system_access]
+    sandbox_required: true
+    connector_name: host
+
+  - id: run_cypher
+    name: Run Cypher Query
+    description: Executes an arbitrary Cypher query against the graph database.
+    category: database
+    risk_level: high
+    requires_approval: true
+    allowed_scopes: [graph.read]
+    dangerous_capabilities: [data_access, data_deletion]
+    sandbox_required: false
+    connector_name: neo4j
+
+  - id: query_patients
+    name: Query Patient Database
+    description: Reads patient records for trial matching.
+    category: database
+    risk_level: medium
+    requires_approval: false
+    allowed_scopes: [patient.read]
+    dangerous_capabilities: [data_access, pii_access]
+    sandbox_required: false
+    connector_name: sqlite
+
+  - id: web_fetch
+    name: Web Fetch / Scrape
+    description: Fetches external web pages (untrusted content).
+    category: external_api
+    risk_level: medium
+    requires_approval: false
+    allowed_scopes: [web.read]
+    dangerous_capabilities: [external_communication]
+    sandbox_required: false
+    connector_name: http

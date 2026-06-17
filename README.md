@@ -234,6 +234,28 @@ The `generic_http` inventory connector is implemented; Dify / Azure OpenAI / Bed
 connectors are documented extension points. Full design + per-platform connection
 requirements: **[docs/LIVE_ASSESSMENT.ja.md](docs/LIVE_ASSESSMENT.ja.md)**.
 
+### LangGraph support & PoC
+
+The OTLP ingester natively understands **LangGraph / LangChain (OpenInference)** span
+attributes (`openinference.span.kind=TOOL`, `tool.name`, `input.value`, `langgraph.node`),
+so traces from an instrumented LangGraph app map straight into the assessment. To stream a
+live LangGraph app's traces in:
+
+```bash
+python -m pip install -e ".[langgraph]"
+```
+```python
+from agentic_ai_exposure_assessor.integrations import langgraph as lg
+lg.instrument_langgraph(endpoint="http://127.0.0.1:8000/v1/traces", service_name="my-agent")
+# build & run your LangGraph app as usual; spans stream to the assessor
+```
+
+A ready-to-run PoC against the
+[GenAI Agent Security Initiative](https://github.com/GenAI-Security-Project/GenAI-Agent-Security-Initiative)
+LangGraph samples (bash RCE / arbitrary Cypher / multi-agent ALS) lives in
+**[examples/genai_agent_security_initiative/](examples/genai_agent_security_initiative/README.md)**
+— an offline PoC (no API keys) plus a live-instrumentation PoC.
+
 ---
 
 ## Web UI

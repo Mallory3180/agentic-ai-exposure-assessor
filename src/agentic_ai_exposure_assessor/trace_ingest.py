@@ -222,12 +222,53 @@ def _normalize_simplified_span(span: dict[str, Any]) -> dict[str, Any]:
 # --------------------------------------------------------------------------- #
 # Normalization to domain objects                                             #
 # --------------------------------------------------------------------------- #
-def _agent_name(attrs: dict[str, Any], span_name: str) -> str:
-    for key in ("agent.name", "agent.id", "gen_ai.agent.name", "service.name"):
+def _first(attrs: dict[str, Any], keys: tuple[str, ...]) -> Any:
+    """Return the first non-empty attribute value among ``keys``."""
+    for key in keys:
         value = attrs.get(key)
-        if value:
-            return str(value)
+        if value not in (None, ""):
+            return value
+    return None
+
+
+# Attribute keys understood across OTLP / OpenInference (LangChain/LangGraph) / generic.
+# Agent identity: prefer explicit agent attributes, then the service, and only fall back to
+# the LangGraph node name (a node is a step within an agent, not the agent itself).
+_AGENT_NAME_KEYS = (
+    "agent.name",
+    "agent.id",
+    "gen_ai.agent.name",
+    "openinference.agent.name",
+    "service.name",
+    "langgraph.node",
+    "graph.node.name",
+    "metadata.langgraph_node",
+)
+_TOOL_NAME_KEYS = (
+    "tool.name",
+    "mcp.tool.name",
+    "function.name",
+    "gen_ai.tool.name",
+)
+_TOOL_ARG_KEYS = (
+    "tool.arguments",
+    "tool.parameters",         # OpenInference TOOL span
+    "tool.call.arguments",
+    "input.value",             # OpenInference input payload (often JSON)
+)
+_TOOL_OUTPUT_KEYS = ("tool.output", "output.value")
+
+
+def _agent_name(attrs: dict[str, Any], span_name: str) -> str:
+    value = _first(attrs, _AGENT_NAME_KEYS)
+    if value:
+        return str(value)
     return span_name or "unknown-agent"
+
+
+def _is_tool_span(attrs: dict[str, Any]) -> bool:
+    """True if OpenInference marks this span as a TOOL span."""
+    return str(attrs.get("openinference.span.kind", "")).upper() == "TOOL"
 
 
 def _detect_approval(attrs: dict[str, Any], events: list[dict[str, Any]]) -> tuple[bool, str]:
@@ -293,11 +334,10 @@ def normalize_document(doc: Any) -> NormalizedTrace:
         agent = _agent_name(attrs, raw["name"])
 
         # ---- Tool / function / MCP-tool call ---------------------------------
-        tool_name = (
-            attrs.get("tool.name")
-            or attrs.get("mcp.tool.name")
-            or attrs.get("function.name")
-        )
+        # Supports OTLP gen_ai, MCP, and OpenInference (LangChain/LangGraph) conventions.
+        tool_name = _first(attrs, _TOOL_NAME_KEYS)
+        if not tool_name and _is_tool_span(attrs):
+            tool_name = raw["name"]  # OpenInference TOOL spans name the span after the tool
         if tool_name:
             approval_observed, approval_status = _detect_approval(attrs, events)
             seq = seq_counters.get(raw["trace_id"], 0)
@@ -310,9 +350,9 @@ def normalize_document(doc: Any) -> NormalizedTrace:
                     agent_name=agent,
                     tool_name=str(tool_name),
                     arguments=redaction.redact_value(
-                        _as_arguments(attrs.get("tool.arguments"))
+                        _as_arguments(_first(attrs, _TOOL_ARG_KEYS))
                     ),
-                    output_summary=redaction.summarize(attrs.get("tool.output")),
+                    output_summary=redaction.summarize(_first(attrs, _TOOL_OUTPUT_KEYS)),
                     status=raw["status"],
                     approval_observed=approval_observed,
                     approval_status=approval_status,

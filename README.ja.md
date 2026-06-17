@@ -266,6 +266,30 @@ OWASP カテゴリ別件数、高リスクツール、承認なしで実行さ�
 
 ---
 
+## LangGraph 対応 と PoC
+
+- **LangGraph / LangChain（OpenInference）トレースを自動認識**します。OTLP インジェスターは
+  `openinference.span.kind=TOOL`、`tool.name`、`input.value`、`langgraph.node` などの属性から
+  ツール呼び出しを正規化します（追加マッピング不要）。
+- 実際の LangGraph アプリを計装してライブ診断するには、オプション依存を入れて計装ヘルパーを使います。
+
+  ```bash
+  python -m pip install -e ".[langgraph]"
+  ```
+  ```python
+  from agentic_ai_exposure_assessor.integrations import langgraph as lg
+  lg.instrument_langgraph(endpoint="http://127.0.0.1:8000/v1/traces",
+                          service_name="my-langgraph-agent")
+  # 以後、通常どおり LangGraph アプリを実行すると span が assessor へ送られます
+  ```
+
+- **PoC**: [GenAI Agent Security Initiative](https://github.com/GenAI-Security-Project/GenAI-Agent-Security-Initiative)
+  の LangGraph 脆弱サンプル（bash RCE / 任意 Cypher / マルチエージェント ALS）を診断する一式を
+  [`examples/genai_agent_security_initiative/`](examples/genai_agent_security_initiative/README.md)
+  に用意しています（APIキー不要のオフライン PoC ＋ 実アプリ計装のライブ PoC）。
+
+---
+
 ## プライバシー・秘匿化（Redaction）
 
 - 秘密情報らしき値（API キー、ベアラートークン、パスワード、秘密鍵、プロバイダのキー接頭辞）は

@@ -1,0 +1,76 @@
+# Inventory modeling the LangGraph insecure samples from
+# https://github.com/GenAI-Security-Project/GenAI-Agent-Security-Initiative
+# (code_samples/top_10_for_llms/frameworks/langgraph/*)
+agents:
+  # unrestricted_agent/agent.py — executes arbitrary bash via an LLM-generated command.
+  - id: unrestricted-bash-agent
+    name: Unrestricted Bash Agent
+    description: LangGraph agent that turns NL into bash and runs it (unrestricted_agent sample).
+    owner: appsec@example.com
+    environment: prod
+    platform: langgraph
+    model_provider: openai
+    model_name: gpt-4o
+    public_exposure: internal
+    trust_level: medium
+    allowed_tools: [execute_command]
+    connected_data_sources: []
+    tags: [langgraph, rce-demo]
+
+  # "Excessive Db Agency" — runs arbitrary Cypher against a graph DB (incl. DETACH DELETE).
+  - id: excessive-db-agent
+    name: Excessive DB Agency Agent
+    description: LangGraph agent that executes arbitrary Cypher queries (Excessive Db Agency sample).
+    owner: data-eng@example.com
+    environment: prod
+    platform: langgraph
+    model_provider: google
+    model_name: gemini-1.5-pro
+    public_exposure: internal
+    trust_level: medium
+    allowed_tools: [run_cypher]
+    connected_data_sources: [graph_db]
+    tags: [langgraph, excessive-agency]
+
+  # multi_agent — ALS clinical-trial recommender: supervisor + DB worker + web-scraper worker.
+  - id: als-supervisor
+    name: ALS Trials Supervisor
+    description: Supervises the patient-DB and web-scraper workers (multi_agent sample).
+    owner: clinical-ai@example.com
+    environment: prod
+    platform: langgraph
+    model_provider: openai
+    model_name: gpt-4o
+    public_exposure: internal
+    trust_level: high
+    allowed_tools: []
+    connected_data_sources: []
+    tags: [langgraph, multi-agent]
+
+  - id: patient-db-agent
+    name: Patient DB Worker
+    description: Queries the (PII-bearing) patient database for trial matching.
+    owner: clinical-ai@example.com
+    environment: prod
+    platform: langgraph
+    model_provider: openai
+    model_name: gpt-4o
+    public_exposure: internal
+    trust_level: medium
+    allowed_tools: [query_patients]
+    connected_data_sources: [patient_db]
+    tags: [langgraph, multi-agent, pii]
+
+  - id: web-scraper-agent
+    name: Web Scraper Worker
+    description: Scrapes external trial listings from the public web (untrusted content).
+    owner: clinical-ai@example.com
+    environment: prod
+    platform: langgraph
+    model_provider: openai
+    model_name: gpt-4o
+    public_exposure: internal
+    trust_level: low
+    allowed_tools: [web_fetch]
+    connected_data_sources: [web_trials]
+    tags: [langgraph, multi-agent, untrusted-input]

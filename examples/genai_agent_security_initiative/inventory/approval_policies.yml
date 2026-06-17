@@ -1,0 +1,16 @@
+approval_policies:
+  - id: ap-bash
+    tool_id: execute_command
+    required: true
+    approver_role: security_engineer
+    condition: always
+    timeout_seconds: 600
+    bypass_allowed: false
+
+  - id: ap-cypher
+    tool_id: run_cypher
+    required: true
+    approver_role: dba
+    condition: write_operation == true
+    timeout_seconds: 300
+    bypass_allowed: false

@@ -1,0 +1,33 @@
+data_sources:
+  - id: graph_db
+    name: graph_db
+    type: database
+    classification: confidential
+    contains_pii: false
+    contains_confidential: true
+    owner: data-eng@example.com
+    connected_agents: [excessive-db-agent]
+    access_scope: graph.read
+    trust: trusted
+
+  - id: patient_db
+    name: patient_db
+    type: database
+    classification: restricted
+    contains_pii: true
+    contains_confidential: true
+    owner: clinical-ai@example.com
+    connected_agents: [patient-db-agent, als-supervisor]
+    access_scope: patient.read
+    trust: trusted
+
+  - id: web_trials
+    name: web_trials
+    type: web
+    classification: public
+    contains_pii: false
+    contains_confidential: false
+    owner: clinical-ai@example.com
+    connected_agents: [web-scraper-agent]
+    access_scope: web.read
+    trust: untrusted

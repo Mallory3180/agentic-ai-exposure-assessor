@@ -1,0 +1,33 @@
+permissions:
+  - id: perm-bash
+    principal_type: agent
+    principal_id: unrestricted-bash-agent
+    tool_id: execute_command
+    scope: shell.exec
+    permission_level: admin
+    source: config
+
+  # Over-broad wildcard scope on the graph DB -> ASI03-001.
+  - id: perm-cypher
+    principal_type: agent
+    principal_id: excessive-db-agent
+    tool_id: run_cypher
+    scope: graph.*
+    permission_level: admin
+    source: config
+
+  - id: perm-patients
+    principal_type: agent
+    principal_id: patient-db-agent
+    tool_id: query_patients
+    scope: patient.read
+    permission_level: read
+    source: config
+
+  - id: perm-web
+    principal_type: agent
+    principal_id: web-scraper-agent
+    tool_id: web_fetch
+    scope: web.read
+    permission_level: read
+    source: config

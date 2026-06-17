@@ -32,6 +32,12 @@ dev = [
     "httpx>=0.27",
     "types-PyYAML>=6.0",
 ]
+# Optional: instrument a LangGraph / LangChain app and export OTLP to this tool.
+langgraph = [
+    "opentelemetry-sdk>=1.25",
+    "opentelemetry-exporter-otlp-proto-http>=1.25",
+    "openinference-instrumentation-langchain>=0.1",
+]
 
 [project.scripts]
 agentic-ai-exposure-assessor = "agentic_ai_exposure_assessor.cli:app"
